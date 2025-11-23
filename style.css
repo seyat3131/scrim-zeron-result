@@ -1,0 +1,175 @@
+/* Genel Stil */
+body {
+    background-color: #111111; /* Koyu Gri */
+    color: #CCCCCC; /* Açık Gri Metin */
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; 
+}
+
+#app-container {
+    /* Arkaplan Resmini Kullanma */
+    background-image: url('IMG_1212.jpg'); 
+    background-size: cover; /* Tüm alanı kapla */
+    background-position: center; /* Resmi ortala */
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Başlık ve Tarih Alanı */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    cursor: default;
+}
+
+.header-left h1 {
+    font-size: 3.5em;
+    margin: 0;
+    letter-spacing: 5px;
+    color: #FF4136; /* PUBG Kırmızı */
+    /* 3D Görsel Efekt */
+    text-shadow: 2px 2px 0 #001F3F, 4px 4px 0 #000; 
+    background-color: rgba(0, 0, 0, 0.7); 
+    padding: 5px 15px;
+    border-radius: 8px;
+}
+
+.header-right {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #AAAAAA; /* Gri */
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+/* Skor Tablosu Alanı - ORTALANMIŞ KUTUCUKLU DÜZEN */
+.scoreboard-area {
+    margin-left: auto; /* Soldan otomatik boşluk */
+    margin-right: auto; /* Sağdan otomatik boşluk */
+    width: 80%; /* Genişliği artır, merkezi göster */
+    
+    border: 3px solid #FF4136; /* Kırmızı Çerçeve */
+    background-color: rgba(0, 0, 0, 0.85); /* Arkaplanı koyulaştırma */
+    margin-top: 50px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5); /* 3D Gölge */
+}
+
+.table-header, .score-row {
+    display: flex;
+    text-align: center;
+    font-weight: bold;
+    color: #FFF;
+}
+
+.table-header {
+    background-color: #000000; /* Saf Siyah */
+    border-bottom: 3px solid #001F3F; /* Lacivert Ayırıcı */
+    text-transform: uppercase;
+}
+
+/* Kolon Genişlikleri ve Çizgiler */
+.rank-col, .team-col, .total-col {
+    padding: 10px 5px;
+    box-sizing: border-box;
+    border-right: 1px solid #444444; /* Gri Dikey Çizgi */
+}
+
+.rank-col { flex-basis: 10%; max-width: 10%; }
+.team-col { flex-basis: 40%; max-width: 40%; text-align: left; padding-left: 15px; }
+.total-col { flex-basis: 10%; max-width: 10%; }
+
+/* Son kolonlarda sağdaki dikey çizgiyi kaldırma */
+.table-header > .total-col:nth-child(3),
+.table-header > .total-col:nth-child(6) {
+    border-right: none;
+}
+
+/* Satır Stilleri */
+.score-row {
+    border-bottom: 1px solid #333333; /* İnce Yatay Çizgi */
+}
+
+.score-cell {
+    padding: 10px 5px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-right: 1px solid #444444;
+}
+
+/* Düzenlenebilir Kutucuk Stili */
+.editable {
+    outline: 2px solid #0074D9; /* Lacivert/Mavi Çerçeve */
+    cursor: text;
+    background-color: rgba(0, 0, 0, 0.95);
+    color: #FF4136; /* Kırmızı metin */
+}
+
+/* Yönetici Paneli - ORTALANMIŞ KUTUCUKLU DÜZEN */
+.admin-panel {
+    margin-top: 50px;
+    padding: 20px;
+    margin-left: auto; 
+    margin-right: auto;
+    width: 80%; /* Tabloyla aynı genişlik */
+    
+    background-color: rgba(0, 0, 0, 0.95);
+    border: 1px solid #FF4136;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+    z-index: 100;
+    text-align: center; /* Butonları ortala */
+}
+
+.admin-panel button {
+    padding: 10px 15px;
+    background-color: #FF4136; /* Kırmızı */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 10px;
+    transition: background-color 0.3s;
+}
+
+.admin-panel button:hover {
+    background-color: #001F3F; /* Lacivert */
+}
+
+.admin-panel .warning {
+    color: #AAAAAA; /* Gri Uyarı Metni */
+    font-weight: bold;
+}
+
+/* Alt Bilgi Link Alanı */
+.footer-link-area {
+    margin-top: 30px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%; /* Tablo ve panelle aynı hizalama */
+    text-align: center;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 1px solid #001F3F; /* Lacivert çerçeve */
+    border-radius: 5px;
+}
+
+.footer-link-area a {
+    color: #0074D9; /* Link Mavi/Lacivert rengi */
+    text-decoration: none; /* Alt çizgiyi kaldır */
+    font-size: 1.1em;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0, 116, 217, 0.5); /* 3D Link efekti */
+}
+
+.footer-link-area a:hover {
+    color: #FF4136; /* Üzerine gelince Kırmızı olsun */
+}
