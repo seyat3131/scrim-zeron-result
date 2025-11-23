@@ -112,44 +112,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderScoreboard(false);
 
-    // --- Yönetici Düzenleme Fonksiyonları ---
-    let editMode = false;
-    const toggleButton = document.getElementById('toggle-edit-mode');
-    const saveButton = document.getElementById('save-data');
+// ... renderScoreboard(false); satırından sonrası
 
-    toggleButton.addEventListener('click', () => {
-        if (adminPanel.style.display === 'none') return; 
-        
-        editMode = !editMode;
-        if (editMode) {
-            alert('Yönetici Düzenleme Modu Açıldı. Kutucuklara yazı yazabilirsiniz.');
-        } else {
-            scores = JSON.parse(localStorage.getItem('zeronScores')) || initialScores;
-            alert('Düzenleme Modu Kapatıldı.');
-        }
-        renderScoreboard(editMode);
-    });
+// --- Yönetici Düzenleme Fonksiyonları ---
+let editMode = false;
+const toggleButton = document.getElementById('toggle-edit-mode');
+const saveButton = document.getElementById('save-data');
 
-    saveButton.addEventListener('click', () => {
-        if (!editMode) {
-            alert('Önce Düzenleme Modunu açmanız gerekiyor.');
-            return;
-        }
-        
-        document.querySelectorAll('.editable').forEach(cell => {
-            const index = cell.getAttribute('data-index');
-            const field = cell.getAttribute('data-field');
-            const newValue = cell.textContent.trim();
-            
-            if (scores[index]) {
-                scores[index][field] = newValue;
-            }
-        });
-
-        // Veriyi kaydet ve canlı güncelle (herkesin görmesi için)
-        localStorage.setItem('zeronScores', JSON.stringify(scores));
-        renderScoreboard(false);
-        editMode = false;
-        alert('Veriler başarıyla kaydedildi ve canlı güncellendi!');
-    });
+toggleButton.addEventListener('click', () => {
+    // Panel görünür değilse (50 tıklama yapılmamışsa) çalışmasın
+    if (adminPanel.style.display === 'none') return; 
+    
+    editMode = !editMode;
+    if (editMode) {
+        alert('Yönetici Düzenleme Modu Açıldı. Kutucuklara yazı yazabilirsiniz.');
+    } else {
+        // Düzenleme modundan çıkınca kaydedilmemiş değişiklikleri geri al
+        scores = JSON.parse(localStorage.getItem('zeronScores')) || initialScores;
+        alert('Düzenleme Modu Kapatıldı.');
+    }
+    renderScoreboard(editMode);
 });
+
+saveButton.addEventListener('click', () => {
+    if (!editMode) {
+        alert('Önce Düzenleme Modunu açmanız gerekiyor.');
+        return;
+    }
+    
+    // Düzenlenen verileri topla
+    document.querySelectorAll('.editable').forEach(cell => {
+        const index = cell.getAttribute('data-index');
+        const field = cell.getAttribute('data-field');
+        const newValue = cell.textContent.trim();
+        
+        if (scores[index]) {
+            scores[index][field] = newValue;
+        }
+    });
+
+    // Veriyi LocalStorage'a kaydet (herkesin görmesi için canlı güncelleme)
+    localStorage.setItem('zeronScores', JSON.stringify(scores));
+    renderScoreboard(false); // Tabloyu düzenleme modu kapalı olarak yeniden çiz
+    editMode = false;
+    alert('Veriler başarıyla kaydedildi ve canlı güncellendi!');
+});
+
+}); // document.addEventListener('DOMContentLoaded', ... kapanışı    
