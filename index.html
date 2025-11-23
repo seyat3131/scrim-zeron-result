@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZERON ORGANİZASYON - Canlı Puan Durumu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        
+        <header>
+            <div class="header-left">
+                <h1>ZERON ORGANİZASYON</h1>
+            </div>
+            <div class="header-right">
+                <span id="live-date"></span>
+            </div>
+        </header>
+
+        <div class="scoreboard-area">
+            
+            <div class="table-header">
+                <span class="rank-col">RANK</span>
+                <span class="team-col">TEAM NAME</span>
+                <span class="total-col">TOTAL</span>
+                <span class="rank-col">RANK</span>
+                <span class="team-col">TEAM NAME</span>
+                <span class="total-col">TOTAL</span>
+            </div>
+            
+            <div id="score-rows">
+                </div>
+        </div>
+
+        <div class="admin-panel">
+            <h2>Yönetici Kontrol Paneli</h2>
+            <p class="ip-note">**Kullanım:** Bu panel, sayfada gizli bir aktivasyon mekanizması ile açılmıştır.</p>
+            <button id="toggle-edit-mode">Düzenleme Modunu Aç / Kapat</button>
+            <button id="save-data">Verileri Kaydet (Canlı Güncelle)</button>
+            <p class="warning">
+                UYARI: Düzenleme modu açıldığında, kutucuklara yeni değerler yazıp Kaydet butonuna basarak canlı yayını güncelleyebilirsiniz.
+            </p>
+        </div>
+        
+        <div class="footer-link-area">
+            <p>
+                <a href="https://www.instagram.com/channel/AbZQkLlACS31g8OC/" target="_blank">
+                    Eğlenceli Scrim Maçlarımıza Katılmak İsteyenler Link: https://www.instagram.com/channel/AbZQkLlACS31g8OC/
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
