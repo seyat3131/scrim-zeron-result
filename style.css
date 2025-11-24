@@ -1,0 +1,345 @@
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // =======================================================
+    // 1. FIREBASE KONFİGÜRASYONU 
+    // =======================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyAuEhr-2l_PUJ5LfVFkYy9Z3UvRRLZgOjQ",
+        authDomain: "zeron-result.firebaseapp.com",
+        projectId: "zeron-result",
+        storageBucket: "zeron-result.firebasestorage.app",
+        messagingSenderId: "896044676862",
+        appId: "1:896044676862:web:7b7e26700dca7fabc257af",
+        measurementId: "G-SVPZPYYPDD",
+        databaseURL: "https://zeron-result-default-rtdb.europe-west1.firebasedatabase.app" 
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const dbRef = database.ref('scoreboard/teams'); // Canlı verinin yolu
+    // =======================================================
+
+
+    // =======================================================
+    // 2. SABİT TANIMLAR VE BAŞLANGIÇ VERİSİ
+    // =======================================================
+    const REQUIRED_CLICKS = 50; 
+    const TOTAL_TEAMS = 25; 
+    const DEFAULT_COLOR = '#A9A9A9'; // Koyu Gri
+    const localStorageAdminKey = 'zeron_admin_active'; // Kalıcı yönetici anahtarı
+    
+    let clickCount = 0;
+    let editMode = false;
+    let activeEdit = null; 
+
+    const adminPanel = document.querySelector('.admin-panel');
+    const headerElement = document.querySelector('header');
+    const clickCounterElement = document.getElementById('click-counter');
+    const logoutButton = document.getElementById('logout-admin');
+    const saveButton = document.getElementById('save-data');
+    const panelNote = document.getElementById('panel-note');
+
+
+    // Başlangıç verilerini (25 slot) oluştur - ASLA DEĞİŞMEYEN YEDEĞİMİZ
+    let initialScores = [];
+    for (let i = 1; i <= TOTAL_TEAMS; i++) {
+        initialScores.push({ 
+            rank: `#${i < 10 ? '0' + i : i}`, 
+            team: `TAKIM ADI ${i}`, 
+            color: DEFAULT_COLOR, 
+            total: '0' 
+        });
+    }
+    let scores = initialScores; // Geçerli skor verisi
+    const scoreRowsContainer = document.getElementById('score-rows');
+
+    // Yönetici paneli ve sayaç gizlidir.
+    adminPanel.style.display = 'none'; 
+    clickCounterElement.style.display = 'none'; 
+    
+
+    // =======================================================
+    // 3. YÖNETİCİ MODU İŞLEMLERİ
+    // =======================================================
+
+    /**
+     * Yönetici modunu aktif eder ve kalıcılığını sağlar.
+     */
+    function enableAdminMode(isPersistent = false) {
+        adminPanel.style.display = 'block'; 
+        clickCounterElement.style.display = 'inline-block'; 
+        clickCounterElement.textContent = `YÖNETİCİ AKTİF${isPersistent ? ' (KALICI)' : ''}`; 
+        
+        editMode = true;
+        
+        // Yetkiyi kalıcı hale getir
+        if (!isPersistent) {
+            localStorage.setItem(localStorageAdminKey, 'true');
+            console.log('Yönetici Yetkisi Kalıcı Olarak Kaydedildi.');
+        }
+
+        renderScoreboard(editMode); 
+    }
+    
+    // Yöneticilik yetkisini kaldıran fonksiyon
+    logoutButton.addEventListener('click', () => {
+        if (!confirm('Yöneticilik yetkisini kaldırmak istediğinizden emin misiniz? Sayfa yenilenecektir.')) return;
+        localStorage.removeItem(localStorageAdminKey);
+        window.location.reload(); 
+    });
+
+
+    // --- Sayfa Yüklenince Kalıcı Yetki Kontrolü ve İlk Render (Boş Kalmama Garantisi) ---
+    if (localStorage.getItem(localStorageAdminKey) === 'true') {
+        enableAdminMode(true);
+    } else {
+        // Firebase verisi gelmeden önce varsayılan tabloyu göster
+        renderScoreboard(editMode);
+    }
+
+    // TIKLAMA ALANI: Yönetici panelini açmak için HEADER kullanılır
+    headerElement.addEventListener('click', () => {
+        if (editMode || adminPanel.style.display !== 'none') return;
+        
+        clickCount++;
+        
+        if (clickCount >= REQUIRED_CLICKS) {
+            enableAdminMode();
+            clickCount = 0;
+        }
+    });
+    
+    // =======================================================
+    // 4. CANLI SKOR VE RENDER İŞLEMLERİ
+    // =======================================================
+    
+    /**
+     * Puan tablosunu çizer.
+     */
+    function renderScoreboard(isEditable) {
+        scoreRowsContainer.innerHTML = ''; 
+        
+        const half = Math.ceil(TOTAL_TEAMS / 2); 
+        
+        // Tablonun asla boş kalmamasını garanti et
+        const currentScores = scores.length === TOTAL_TEAMS ? scores : initialScores;
+
+        for (let i = 0; i < half; i++) {
+            const row = document.createElement('div');
+            row.className = 'score-row';
+            
+            if (isEditable) {
+                row.classList.add('admin-mode-active');
+            } else {
+                row.classList.remove('admin-mode-active');
+            }
+
+            // SOL TARAF
+            const leftData = currentScores[i];
+            const teamColorL = leftData.color || DEFAULT_COLOR;
+            
+            // Renk kutucuğu yönetici modunda görünür, normal modda gizlidir
+            const colorContentL = isEditable 
+                ? `<span class="score-cell color-col color-editable editable" data-index="${i}" data-field="color">${teamColorL}</span>`
+                : `<span class="score-cell color-col hidden-color-cell"></span>`; 
+
+            row.innerHTML += `
+                <span class="score-cell rank-col">${leftData.rank}</span>
+                <span class="score-cell team-col ${isEditable ? 'editable' : ''}" data-index="${i}" data-field="team" style="color: ${teamColorL};">${leftData.team}</span>
+                ${colorContentL}
+                <span class="score-cell total-col ${isEditable ? 'editable' : ''}" data-index="${i}" data-field="total">${leftData.total}</span>
+            `;
+
+            // SAĞ TARAF
+            const rightIndex = i + half;
+            
+            if (rightIndex < TOTAL_TEAMS) {
+                const rightData = currentScores[rightIndex];
+                const teamColorR = rightData.color || DEFAULT_COLOR;
+                
+                const colorContentR = isEditable 
+                    ? `<span class="score-cell color-col color-editable editable" data-index="${rightIndex}" data-field="color">${teamColorR}</span>`
+                    : `<span class="score-cell color-col hidden-color-cell"></span>`; 
+
+                row.innerHTML += `
+                    <span class="score-cell rank-col">${rightData.rank}</span>
+                    <span class="score-cell team-col ${isEditable ? 'editable' : ''}" data-index="${rightIndex}" data-field="team" style="color: ${teamColorR};">${rightData.team}</span>
+                    ${colorContentR}
+                    <span class="score-cell total-col ${isEditable ? 'editable' : ''}" data-index="${rightIndex}" data-field="total">${rightData.total}</span>
+                `;
+            } else {
+                 // Simetri için boş hücreler
+                 row.innerHTML += `
+                    <span class="score-cell rank-col"></span>
+                    <span class="score-cell team-col"></span>
+                    <span class="score-cell color-col hidden-color-cell"></span> 
+                    <span class="score-cell total-col"></span>
+                `;
+            }
+
+            scoreRowsContainer.appendChild(row);
+        }
+
+        // Düzenlenebilirliği ayarla
+        if (isEditable) {
+            document.querySelectorAll('.editable').forEach(cell => {
+                cell.setAttribute('contenteditable', 'true');
+            });
+        } else {
+            document.querySelectorAll('.score-cell').forEach(cell => {
+                cell.removeAttribute('contenteditable');
+            });
+        }
+    }
+    
+    // FIREBASE OKUMA (CANLI DİNLEME) İŞLEVİ - ANLIK GÜNCELLEME BURADA YAPILIR
+    dbRef.on('value', (snapshot) => {
+        
+        // 1. Aktif Düzenlemeyi Kaydet (Yazı Koruma Mekanizması)
+        if (editMode) {
+            const focusedElement = document.activeElement;
+            if (focusedElement && focusedElement.hasAttribute('contenteditable')) {
+                activeEdit = {
+                    index: focusedElement.getAttribute('data-index'),
+                    field: focusedElement.getAttribute('data-field'),
+                    content: focusedElement.textContent,
+                };
+            } else {
+                activeEdit = null;
+            }
+        }
+        
+        // 2. Firebase Verisini Al ve Güvenli Hale Getir
+        const fetchedData = snapshot.val();
+        let tempScores;
+
+        if (Array.isArray(fetchedData) && fetchedData.length === TOTAL_TEAMS) {
+            tempScores = fetchedData;
+        } else if (fetchedData && typeof fetchedData === 'object' && Object.keys(fetchedData).length === TOTAL_TEAMS) {
+             tempScores = Object.values(fetchedData); 
+        } else {
+            // Veri yoksa veya geçersizse, varsayılan (initialScores) kullanılır.
+            tempScores = initialScores;
+        }
+        
+        // Sadece 25 elemanlı dizi ise kabul et
+        if (tempScores.length === TOTAL_TEAMS) {
+            scores = tempScores;
+        } else {
+            scores = initialScores;
+        }
+
+        // Veri değiştikçe herkesin ekranını günceller
+        renderScoreboard(editMode); 
+
+        // 3. Kaydedilen Düzenlemeyi Geri Yükle (Yazı Koruma)
+        if (activeEdit) {
+            const targetCell = document.querySelector(`.score-cell[data-index="${activeEdit.index}"][data-field="${activeEdit.field}"]`);
+            
+            if (targetCell) {
+                targetCell.textContent = activeEdit.content;
+                targetCell.focus(); 
+                
+                const range = document.createRange();
+                const selection = window.getSelection();
+                if (targetCell.childNodes.length > 0) {
+                     const textNode = targetCell.childNodes[0];
+                     range.setStart(textNode, textNode.length);
+                     range.collapse(true);
+                     selection.removeAllRanges();
+                     selection.addRange(range);
+                }
+            }
+            activeEdit = null; 
+        }
+        
+    }, (error) => {
+        console.error("Firebase veri okuma hatası: ", error);
+        scores = initialScores;
+        renderScoreboard(editMode); 
+    });
+
+
+    // --- Yönetici Kayıt Fonksiyonu - KALICI KAYIT BURADA YAPILIR ---
+    saveButton.addEventListener('click', () => {
+        if (!editMode) {
+            panelNote.textContent = 'Önce Düzenleme Modunu açmanız gerekiyor!';
+            return;
+        }
+        
+        // Butonu devre dışı bırak ve yükleniyor mesajı ver
+        saveButton.disabled = true;
+        saveButton.textContent = 'Kaydediliyor...';
+        panelNote.textContent = 'Verileriniz sunucuya yazılıyor, lütfen bekleyin.';
+
+        // 1. Düzenlenen verileri topla
+        document.querySelectorAll('.score-row [contenteditable="true"]').forEach(cell => {
+            const index = cell.getAttribute('data-index');
+            const field = cell.getAttribute('data-field');
+            let newValue = cell.textContent.trim();
+            
+            // Renk alanı doğrulama (HEX kodu)
+            if (field === 'color') {
+                if (newValue.length > 0 && newValue[0] !== '#') {
+                    newValue = '#' + newValue;
+                }
+                if (!/^#[0-9A-F]{6}$/i.test(newValue)) {
+                    newValue = DEFAULT_COLOR; 
+                    console.warn(`[UYARI] Geçersiz renk kodu. Varsayılan renk kullanıldı.`);
+                }
+            }
+            
+            // Toplam (total) alanı doğrulama (sadece sayı)
+            if (field === 'total') {
+                newValue = newValue.replace(/[^0-9]/g, '');
+                if (newValue === '') {
+                    newValue = '0';
+                }
+            }
+
+            if (scores[index]) {
+                scores[index][field] = newValue;
+            }
+        });
+        
+        // 2. Kontrol (25 eleman garantisi)
+        if (scores.length !== TOTAL_TEAMS) {
+            console.error('Kayıt sırasında skor dizisi eksik/hatalı. Kayıt iptal edildi.');
+            saveButton.disabled = false;
+            saveButton.textContent = 'Verileri Kaydet (Canlı Güncelle)';
+            panelNote.textContent = 'HATA: Veri tutarsızlığı nedeniyle kayıt başarısız.';
+            return;
+        }
+
+        // 3. FIREBASE'E YAZ (Kalıcı Kayıt)
+        dbRef.set(scores)
+            .then(() => {
+                panelNote.textContent = 'KAYIT BAŞARILI! Veriler anında tüm kullanıcılara yansıdı.';
+                console.log('Veriler başarıyla kaydedildi.');
+            })
+            .catch((error) => {
+                panelNote.textContent = `HATA: Kayıt başarısız oldu: ${error.message}`;
+                console.error('HATA: Veritabanına kayıt başarısız oldu: ', error);
+            })
+            .finally(() => {
+                 // 2 saniye sonra butonu sıfırla
+                setTimeout(() => {
+                    saveButton.disabled = false;
+                    saveButton.textContent = 'Verileri Kaydet (Canlı Güncelle)';
+                    panelNote.textContent = 'Panel etkinleştirildi. Düzenlemeleri yapıp Kaydet\'e basın.';
+                }, 2000);
+            });
+    });
+    
+    // --- Canlı Tarih Güncelleme ---
+    const liveDateElement = document.getElementById('live-date');
+    function updateLiveDate() {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        const formattedDate = now.toLocaleDateString('tr-TR', options);
+        liveDateElement.textContent = formattedDate;
+    }
+    setInterval(updateLiveDate, 1000);
+    updateLiveDate(); 
+
+});
